@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Singapore Book Council PA</title>
+    <link rel="icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHiQBFhzD833mCBl3PV0eWILcGKRjZg5WFQw&s" type="image/x-icon" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons+Round"
+      rel="stylesheet"
+    />
+    {% block head %} {% endblock %}
+    <style>
+      body {
+        background: linear-gradient(to bottom, #f8f9fa, #e0f7fa);
+        font-family: 'Inter', sans-serif;
+      }
+
+      .sidebar {
+        background: white;
+        border-left: 10px solid #6c63ff; /* Purple from the logo */
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .sidebar a {
+        transition: all 0.3s ease;
+      }
+
+      .sidebar a:hover {
+        background: linear-gradient(to right, #ff9e80, #ffd180);
+        color: white !important;
+        transform: translateX(5px);
+      }
+
+      .active-link {
+        background: linear-gradient(to right, #80cbc4, #4db6ac);
+        color: white !important;
+      }
+
+      .logo {
+        width: 50px;
+        height: 50px;
+        object-fit: contain;
+      }
+    </style>
+  </head>
+
+  <body class="p-6 min-h-screen flex">
+    <div class="flex w-full">
+      <!-- Sidebar -->
+      <div class="md:w-1/5 sidebar p-4 flex flex-col justify-between">
+        <div class="flex flex-col items-center mb-8">
+          <img
+            alt="Book Icon"
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHiQBFhzD833mCBl3PV0eWILcGKRjZg5WFQw&s"
+            class="logo mb-4"
+          />
+          <nav class="flex flex-col space-y-1 w-full">
+            <a
+              href="/"
+              class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-white hover:bg-purple-300 rounded-lg transition-colors {% if active_page == 'home' %}active-link{% endif %}"
+            >
+              <span class="material-icons-round">home</span>
+              <span>Home</span>
+            </a>
+            <a
+              href="/calendar"
+              class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-white hover:bg-purple-300 rounded-lg transition-colors {% if active_page == 'calendar' %}active-link{% endif %}"
+            >
+              <span class="material-icons-round">calendar_today</span>
+              <span>Schedule</span>
+            </a>
+            
+            <a
+              href="/mail"
+              class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-white hover:bg-purple-300 rounded-lg transition-colors {% if active_page == 'mail' %}active-link{% endif %}"
+            >
+              <span class="material-icons-round">mail</span>
+              <span>Email</span>
+            </a>
+            <a
+              href="/reminders"
+              class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-white hover:bg-purple-300 rounded-lg transition-colors {% if active_page == 'reminders' %}active-link{% endif %}"
+            >
+              <span class="material-icons-round">notifications</span>
+              <span>Reminders</span>
+            </a>
+            <a
+              href="/settings"
+              class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:text-white hover:bg-purple-300 rounded-lg transition-colors {% if active_page == 'settings' %}active-link{% endif %}"
+            >
+              <span class="material-icons-round">settings</span>
+              <span>Setting</span>
+            </a>
+          </nav>
+        </div>
+
+        <!-- Log Out Link -->
+        <div class="mt-auto flex justify-center items-center">
+          <a
+            href="/logout"
+            class="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-red-300 rounded-lg transition-colors w-full"
+          >
+            <span class="material-icons-round">logout</span>
+            <span>Log Out</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      {% block body %} {% endblock %}
+    </div>
+  </body>
+</html>

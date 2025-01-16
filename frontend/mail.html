@@ -1,0 +1,513 @@
+{% extends "template.html" %}
+
+{% block body %}
+      <!-- Main Content -->
+      <div class="w-4/5 pl-6 flex flex-col min-h-[calc(100vh-24px)]">
+        <!-- Header with Search -->
+        <div class="flex justify-between items-center mb-6">
+          <h1 class="text-4xl font-bold">Email</h1>
+          <div class="relative">
+            <input type="text" placeholder="Search here" class="pl-10 pr-4 py-2 border rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-purple-500"/>
+            <span class="material-icons-round absolute left-3 top-2.5 text-gray-400">search</span>
+          </div>
+        </div>
+
+        <!-- Horizontal Folder List -->
+        <div class="flex space-x-1 mb-6 pb-4 border-b">
+          <button onclick="loadFolder('inbox')" class="folder-tab flex items-center space-x-2 text-gray-600 hover:bg-purple-50 px-4 py-2 rounded-lg transition-colors" data-folder="inbox">
+            <span class="material-icons-round text-sm">inbox</span>
+            <span>Inbox</span>
+          </button>
+          <button onclick="loadFolder('archive')" class="folder-tab flex items-center space-x-2 text-gray-600 hover:bg-purple-50 px-4 py-2 rounded-lg transition-colors" data-folder="archive">
+            <span class="material-icons-round text-sm">archive</span>
+            <span>Archive</span>
+          </button>
+          <button onclick="loadFolder('drafts')" class="folder-tab flex items-center space-x-2 text-gray-600 hover:bg-purple-50 px-4 py-2 rounded-lg transition-colors" data-folder="drafts">
+            <span class="material-icons-round text-sm">drafts</span>
+            <span>Drafts</span>
+          </button>
+          <button onclick="loadFolder('sentitems')" class="folder-tab flex items-center space-x-2 text-gray-600 hover:bg-purple-50 px-4 py-2 rounded-lg transition-colors" data-folder="sentitems">
+            <span class="material-icons-round text-sm">send</span>
+            <span>Sent</span>
+          </button>
+        </div>
+
+        <!-- Email Content Area -->
+        <div class="flex-1">
+          <!-- Email List -->
+          <div id="email-container" class="bg-white rounded-lg shadow-lg p-4 w-full">
+            <!-- Emails will be dynamically loaded here -->
+          </div>
+           <!-- Add Modal for Generated Reply -->
+          <div id="replyModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+            <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Generated Reply</h3>
+                <button onclick="closeReplyModal()" class="text-gray-500 hover:text-gray-700">
+                  <span class="material-icons-round">close</span>
+                </button>
+              </div>
+              <div id="generatedReplyContent" class="mb-4">
+                <p class="text-gray-600">Generating reply...</p>
+              </div>
+              <div class="flex justify-end space-x-2">
+                <button onclick="closeReplyModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                  Cancel
+                </button>
+                <button onclick="copyReply()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                  Copy Reply
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- Compose Button -->
+          <button onclick="openComposeModal()" class="fixed bottom-6 right-6 bg-purple-600 text-white rounded-full p-4 shadow-lg hover:bg-purple-700 flex items-center space-x-2">
+            <span class="material-icons-round">edit</span>
+            <span>Compose</span>
+          </button>
+
+          <!-- Compose Email Modal -->
+          <div id="composeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+            <div class="bg-white rounded-lg p-6 max-w-3xl w-full mx-4">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Compose Email</h3>
+                <button onclick="closeComposeModal()" class="text-gray-500 hover:text-gray-700">
+                  <span class="material-icons-round">close</span>
+                </button>
+              </div>
+              <form id="emailForm" class="space-y-4">
+                <input type="hidden" id="draftId" value="">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">To:</label>
+                  <input type="email" id="emailTo" required 
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"/>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">CC:</label>
+                  <input type="text" id="emailCc"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="Separate multiple emails with semicolons"/>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">BCC:</label>
+                  <input type="text" id="emailBcc"
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="Separate multiple emails with semicolons"/>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Subject:</label>
+                  <input type="text" id="emailSubject" required
+                        class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"/>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Message:</label>
+                  <textarea id="emailBody" required rows="10"
+                            class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                </div>
+                <div class="flex justify-between">
+                  <button type="button" onclick="saveDraft()" 
+                          class="px-4 py-2 text-purple-600 hover:bg-purple-50 rounded-lg flex items-center space-x-2">
+                    <span class="material-icons-round text-sm">save</span>
+                    <span>Save Draft</span>
+                  </button>
+                  <div class="space-x-2">
+                    <button type="button" onclick="closeComposeModal()" 
+                            class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                      Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                      Send
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <style> 
+        body {
+          font-family: 'Inter', sans-serif;
+        }
+
+        .email-content {
+          transition: all 0.3s ease-in-out;
+        }
+
+        .rotate-180 {
+          transform: rotate(180deg);
+        }
+
+        .folder-tab.active {
+          background-color: rgb(243 232 255);
+          color: rgb(126 34 206);
+        }
+    </style>
+    <script>
+      // Function to update active folder tab
+      function updateActiveFolderTab(folder) {
+        document.querySelectorAll('.folder-tab').forEach(tab => {
+          if (tab.dataset.folder === folder) {
+            tab.classList.add('active');
+          } else {
+            tab.classList.remove('active');
+          }
+        });
+      }
+
+      // Function to load emails for a specific folder
+      function loadFolder(folder) {
+        updateActiveFolderTab(folder);
+        
+        fetch(`/get_emails/${folder}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.error) {
+              throw new Error(data.error);
+            }
+            displayEmails(data.emails);
+          })
+          .catch(error => {
+            console.error('Error loading emails:', error);
+            document.getElementById('email-container').innerHTML = `
+              <p class="text-center py-5 text-red-600">Error loading emails: ${error.message}</p>
+            `;
+          });
+      }
+
+      // Update the displayEmails function to include the reply button
+      function displayEmails(emails) {
+        const container = document.getElementById('email-container');
+        if (!emails || emails.length === 0) {
+          container.innerHTML = '<p class="text-center py-5">No emails found in this folder.</p>';
+          return;
+        }
+
+        container.innerHTML = emails.map(email => `
+          <div class="border-b pb-4 mb-4">
+            <div class="flex flex-col">
+              <div class="cursor-pointer group" onclick="toggleEmail('${email.id}')">
+                <div class="flex justify-between items-center">
+                  <div>
+                    <h3 class="font-semibold group-hover:text-purple-600">${email.subject}</h3>
+                    <p class="text-gray-600">${email.from}</p>
+                    <p class="text-gray-600">${email.receivedDateTime}</p>
+                  </div>
+                  <span class="material-icons-round transform transition-transform" id="arrow-${email.id}">expand_more</span>
+                </div>
+              </div>
+              <div class="email-content mt-4 w-full hidden" id="content-${email.id}">
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <div class="email-summary mb-4" id="summary-${email.id}">
+                    <h4 class="font-medium mb-2">Summary</h4>
+                    <p class="text-gray-600">Loading summary...</p>
+                  </div>
+                  <div class="email-body" id="body-${email.id}">
+                    <h4 class="font-medium mb-2">Full Message</h4>
+                    <p class="text-gray-600">${email.body}</p>
+                  </div>
+                  <div class="mt-4 flex justify-end">
+                    <button onclick="generateReply('${email.id}')" class="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                      <span class="material-icons-round text-sm">reply</span>
+                      <span>Generate Reply</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Toggle email content function
+      function toggleEmail(emailId) {
+        const contentDiv = document.getElementById(`content-${emailId}`);
+        const arrowIcon = document.getElementById(`arrow-${emailId}`);
+        
+        contentDiv.classList.toggle('hidden');
+        arrowIcon.classList.toggle('rotate-180');
+        
+        const summaryDiv = document.getElementById(`summary-${emailId}`);
+        if (summaryDiv.innerHTML.includes('Loading summary...')) {
+          summarizeEmail(emailId);
+        }
+      }
+
+      // Summarize email function
+      function summarizeEmail(emailId) {
+        fetch('/summarize_email', {
+          method: 'POST',
+          body: JSON.stringify({ email_id: emailId }),
+          headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.summary) {
+            const summaryDiv = document.getElementById(`summary-${emailId}`);
+            summaryDiv.innerHTML = `
+              <h4 class="font-medium mb-2">Summary</h4>
+              <p class="text-gray-600">${data.summary}</p>
+            `;
+          } else {
+            throw new Error(data.error || 'Unknown error');
+          }
+        })
+        .catch(error => {
+          console.error('Error summarizing email:', error);
+          const summaryDiv = document.getElementById(`summary-${emailId}`);
+          summaryDiv.innerHTML = `
+            <h4 class="font-medium mb-2">Summary</h4>
+            <p class="text-red-600">Error loading summary: ${error.message}</p>
+          `;
+        });
+      }
+      
+      function generateReply(emailId) {
+        const modal = document.getElementById('replyModal');
+        const replyContent = document.getElementById('generatedReplyContent');
+        modal.classList.remove('hidden');
+        replyContent.innerHTML = '<p class="text-gray-600">Generating reply...</p>';
+
+        fetch('/generate_reply', {
+          method: 'POST',
+          body: JSON.stringify({ email_id: emailId }),
+          headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.reply) {
+            replyContent.innerHTML = `
+              <textarea id="replyText" class="w-full h-48 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" readonly>
+                ${data.reply}
+              </textarea>
+            `;
+          } else {
+            throw new Error(data.error || 'Failed to generate reply');
+          }
+        })
+        .catch(error => {
+          replyContent.innerHTML = `
+            <p class="text-red-600">Error generating reply: ${error.message}</p>
+          `;
+        });
+      }
+
+      // Function to close reply modal
+      function closeReplyModal() {
+        const modal = document.getElementById('replyModal');
+        modal.classList.add('hidden');
+      }
+
+      // Function to copy generated reply
+      function copyReply() {
+        const replyText = document.getElementById('replyText');
+        replyText.select();
+        document.execCommand('copy');
+        
+        // Show feedback
+        const copyButton = document.querySelector('button:contains("Copy Reply")');
+        copyButton.textContent = 'Copied!';
+        setTimeout(() => {
+          copyButton.textContent = 'Copy Reply';
+        }, 2000);
+      }
+
+      // Close modal when clicking outside
+      document.addEventListener('click', (event) => {
+        const modal = document.getElementById('replyModal');
+        if (event.target === modal) {
+          closeReplyModal();
+        }
+      })
+
+      // Load inbox by default
+      document.addEventListener('DOMContentLoaded', () => {
+        loadFolder('inbox');
+      });
+
+      
+      // Auto-save timer
+      let autoSaveTimer = null;
+      let lastAutoSave = null;
+
+      // Functions for compose email functionality
+      function openComposeModal(draftId = null) {
+        const modal = document.getElementById('composeModal');
+        modal.classList.remove('hidden');
+        
+        if (draftId) {
+          loadDraft(draftId);
+        } else {
+          startAutoSave();
+        }
+      }
+
+      function closeComposeModal() {
+        const modal = document.getElementById('composeModal');
+        modal.classList.add('hidden');
+        document.getElementById('emailForm').reset();
+        document.getElementById('draftId').value = '';
+        stopAutoSave();
+      }
+
+      function startAutoSave() {
+        stopAutoSave();
+        autoSaveTimer = setInterval(autoSaveDraft, 30000); // Auto-save every 30 seconds
+      }
+
+      function stopAutoSave() {
+        if (autoSaveTimer) {
+          clearInterval(autoSaveTimer);
+          autoSaveTimer = null;
+        }
+      }
+
+      function getEmailData() {
+        return {
+          draftId: document.getElementById('draftId').value,
+          to: document.getElementById('emailTo').value,
+          cc: document.getElementById('emailCc').value,
+          bcc: document.getElementById('emailBcc').value,
+          subject: document.getElementById('emailSubject').value,
+          body: document.getElementById('emailBody').value
+        };
+      }
+
+      async function autoSaveDraft() {
+        const emailData = getEmailData();
+        
+        // Only save if there's content and changes since last save
+        if ((emailData.to || emailData.subject || emailData.body) && 
+            JSON.stringify(emailData) !== lastAutoSave) {
+          await saveDraft(true);
+          lastAutoSave = JSON.stringify(emailData);
+        }
+      }
+
+      async function saveDraft(isAutoSave = false) {
+        const emailData = getEmailData();
+        
+        try {
+          const response = await fetch('/save_draft', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(emailData)
+          });
+          
+          const data = await response.json();
+          
+          if (data.success) {
+            document.getElementById('draftId').value = data.draftId;
+            
+            if (!isAutoSave) {
+              alert('Draft saved successfully!');
+              
+              // Refresh drafts folder if it's currently open
+              const draftsTab = document.querySelector('[data-folder="drafts"]');
+              if (draftsTab.classList.contains('active')) {
+                loadFolder('drafts');
+              }
+            }
+          } else {
+            throw new Error(data.error || 'Failed to save draft');
+          }
+        } catch (error) {
+          if (!isAutoSave) {
+            alert(`Error saving draft: ${error.message}`);
+          }
+          console.error('Error saving draft:', error);
+        }
+      }
+
+      async function loadDraft(draftId) {
+        try {
+          const response = await fetch(`/get_draft/${draftId}`);
+          const data = await response.json();
+          
+          if (data.success) {
+            document.getElementById('draftId').value = draftId;
+            document.getElementById('emailTo').value = data.draft.to || '';
+            document.getElementById('emailCc').value = data.draft.cc || '';
+            document.getElementById('emailBcc').value = data.draft.bcc || '';
+            document.getElementById('emailSubject').value = data.draft.subject || '';
+            document.getElementById('emailBody').value = data.draft.body || '';
+            
+            startAutoSave();
+            lastAutoSave = JSON.stringify(getEmailData());
+          } else {
+            throw new Error(data.error || 'Failed to load draft');
+          }
+        } catch (error) {
+          alert(`Error loading draft: ${error.message}`);
+          console.error('Error loading draft:', error);
+        }
+      }
+
+      // Handle form submission
+      document.getElementById('emailForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const emailData = getEmailData();
+        
+        // Parse CC and BCC fields (split by semicolon and trim)
+        emailData.cc = emailData.cc ? emailData.cc.split(';').map(email => email.trim()) : [];
+        emailData.bcc = emailData.bcc ? emailData.bcc.split(';').map(email => email.trim()) : [];
+
+        // Show loading state
+        const submitButton = e.submitter;
+        const originalText = submitButton.textContent;
+        submitButton.disabled = true;
+        submitButton.innerHTML = `
+          <span class="inline-block animate-spin mr-2">↻</span>
+          Sending...
+        `;
+
+        // Send email using Flask backend
+        fetch('/send_email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(emailData)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Email sent successfully!');
+            closeComposeModal();
+            
+            // Refresh the sent items folder if it's currently open
+            const sentTab = document.querySelector('[data-folder="sentitems"]');
+            if (sentTab.classList.contains('active')) {
+              loadFolder('sentitems');
+            }
+          } else {
+            throw new Error(data.error || 'Failed to send email');
+          }
+        })
+        .catch(error => {
+          alert(`Error sending email: ${error.message}`);
+        })
+        .finally(() => {
+          // Reset button state
+          submitButton.disabled = false;
+          submitButton.textContent = originalText;
+        });
+      });
+
+      // Close modal when clicking outside
+      document.addEventListener('click', (event) => {
+        const modal = document.getElementById('composeModal');
+        if (event.target === modal) {
+          closeComposeModal();
+        }
+      });
+
+
+
+    </script>
+{% endblock %}

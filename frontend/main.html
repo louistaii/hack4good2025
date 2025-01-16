@@ -1,0 +1,273 @@
+{% extends "template.html" %}
+
+{% block head %}
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+{% endblock %}
+
+{% block body %}
+
+      <!-- Main Content -->
+      <div class="w-4/5 pl-6 flex flex-col min-h-[calc(100vh-24px)]">
+        <h1 class="text-4xl font-bold mb-6">Welcome Home!</h1>
+        <h1 class="text-1xl font-bold mb-6">{{quote}}</h1>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          
+          <!-- Calendar -->
+          <div class="bg-white rounded-lg p-6 shadow-lg flex flex-col min-h-[calc(50vh-24px)] col-span-1 md:col-span-2">
+            <h2 class="text-lg font-semibold mb-4">Calendar</h2>
+            <div id="calendar"></div> <!-- Calendar Container -->
+          </div>
+
+        
+        
+          <!-- Tasks Section -->
+          <div class="bg-white rounded-lg p-6 shadow-lg flex flex-col col-span-1 md:col-span-1">
+            <h2 class="text-lg font-semibold mb-4">Tasks</h2>
+
+            <!-- Tab Navigation with border -->
+            <div class="flex mb-4 border-b border-gray-200 flex-wrap">
+                {% if todo_data %}
+                    {% for list in todo_data %}
+                        <button class="tab-link px-4 py-2 text-gray-600 hover:text-black font-semibold focus:outline-none" onclick="openTab(event, '{{ list.list_name | replace(' ', '-') }}')">
+                            {{ list.list_name }}
+                        </button>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content-wrapper flex-grow overflow-auto">
+                {% if todo_data %}
+                    {% for list in todo_data %}
+                        <div id="{{ list.list_name | replace(' ', '-') }}" class="tab-content hidden">
+                            <!-- Not Completed Tasks -->
+                            <ul class="space-y-4" id="not-completed-{{ list.list_name | replace(' ', '-') }}">
+                                {% if list.tasks %}
+                                    {% for task in list.tasks[0].not_completed %}
+                                        <li id="task-{{ task.id }}" class="flex items-center space-x-4">
+                                            <div class="task-circle w-4 h-4 border-2 border-blue-500 rounded-full cursor-pointer"
+                                                onclick="completeTask('{{ list.list_name }}', '{{ task.id }}', this)">
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold">{{ task.title }}</p>
+                                                <p class="text-gray-500">
+                                                    {% if task.due_date %}
+                                                        {{ task.due_date }}
+                                                    {% else %}
+                                                        No due date
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                {% endif %}
+                            </ul>
+
+                            <!-- Divider -->
+                            <div class="border-t border-gray-200 my-4"></div>
+
+                            <ul class="space-y-4" id="completed-{{ list.list_name | replace(' ', '-') }}">
+                                {% if list.tasks %}
+                                    {% for task in list.tasks[0].completed %}
+                                        <li id="task-{{ task.id }}" class="flex items-center space-x-4 text-gray-400">
+                                            <div class="w-4 h-4 border-2 task-circle completed rounded-full"></div>
+                                            <div>
+                                                <p class="font-semibold line-through">{{ task.title }}</p>
+                                                <p class="text-gray-500">
+                                                    {% if task.due_date %}
+                                                        {{ task.due_date }}
+                                                    {% else %}
+                                                        No due date
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                {% endif %}
+                            </ul>
+
+                            <!-- Add Task Form -->
+                            <form onsubmit="submitTaskForm(event, '{{ list.list_name }}')" style="display: flex; flex-direction: column; gap: 8px; max-width: 250px; margin: 10px auto; font-size: 0.9rem;">
+                                <input type="hidden" name="list_id" value="{{ list.list_id }}">
+                            
+                                <label for="task_title" style="font-weight: bold;">Task Title:</label>
+                                <input 
+                                    type="text" 
+                                    name="task_title" 
+                                    id="task_title" 
+                                    required 
+                                    style="padding: 6px; font-size: 0.85rem; border: 1px solid #ccc; border-radius: 4px;">
+                            
+                                <label for="due_date" style="font-weight: bold;">Due Date:</label>
+                                <input 
+                                    type="datetime-local" 
+                                    name="due_date" 
+                                    id="due_date" 
+                                    style="padding: 6px; font-size: 0.85rem; border: 1px solid #ccc; border-radius: 4px;">
+                            
+                                <button 
+                                    type="submit" 
+                                    style="padding: 6px 10px; font-size: 0.85rem; color: white; background-color: #007BFF; border: none; border-radius: 4px; cursor: pointer;">
+                                    Add Task
+                                </button>
+                            </form>
+                            
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <script>
+          // Initialize FullCalendar
+          document.addEventListener('DOMContentLoaded', function() {
+                var calendarEl = document.getElementById('calendar');
+                var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                events: [
+                    {% for event in events %}
+                    {
+                        title: '{{ event.title }}',
+                        start: '{{ event.start }}',
+                        end: '{{ event.end }}'
+                    },
+                    {% endfor %}
+                ],
+                dateClick: function(info) {
+                    alert('Date clicked: ' + info.dateStr);
+                }
+                });
+                calendar.render();
+                
+                const firstTabLink = document.querySelector('.tab-link');
+                if (firstTabLink) {
+                    firstTabLink.classList.add('text-blue-500'); // Make the first tab active
+                    const firstTabName = firstTabLink.getAttribute('onclick').match(/'([^']+)'/)[1]; // Extract tab name from onclick
+                    document.getElementById(firstTabName).classList.remove('hidden'); // Show the first tab content
+                }
+            });
+
+            // JavaScript to handle tab switching
+            function openTab(evt, tabName) {
+                const tabContent = document.getElementsByClassName("tab-content");
+                const tabLinks = document.getElementsByClassName("tab-link");
+
+                // Hide all tab content
+                for (let i = 0; i < tabContent.length; i++) {
+                    tabContent[i].classList.add("hidden");
+                }
+
+                // Remove active class from all tabs
+                for (let i = 0; i < tabLinks.length; i++) {
+                    tabLinks[i].classList.remove("text-blue-500");
+                    tabLinks[i].classList.add("text-gray-600");
+                }
+
+                // Show the clicked tab and highlight it
+                document.getElementById(tabName).classList.remove("hidden");
+                evt.currentTarget.classList.add("text-blue-500");
+            }
+
+            // Function to mark a task as completed and move it
+            function completeTask(listName, taskId, taskElement) {
+                const notCompletedSection = document.getElementById(`not-completed-${listName.replace(' ', '-')}`);
+                const completedSection = document.getElementById(`completed-${listName.replace(' ', '-')}`);
+                const taskLi = taskElement.parentElement;
+
+                fetch(`/complete_task/${listName}/${taskId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update task styles
+                        const taskCircle = taskLi.querySelector('.task-circle');
+                        taskCircle.classList.remove('border-blue-500', 'bg-blue-500');
+                        taskCircle.classList.add('completed'); // Apply greyed-out style
+                        taskLi.querySelector('p').classList.add('line-through'); // Strikethrough title
+                        taskLi.classList.add('text-gray-400'); // Grey out text
+
+                        // Move task to completed section
+                        completedSection.appendChild(taskLi);
+                    } else {
+                        console.error('Failed to complete task:', data.message);
+                    }
+                })
+                .catch(error => console.error('Error completing task:', error));
+            };
+
+            function submitTaskForm(event, listName) {
+                event.preventDefault();
+                const form = event.target;
+                const formData = new FormData(form);
+
+                // Show loading state (optional)
+                const submitButton = form.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.innerText;
+                submitButton.innerText = 'Adding...';
+                submitButton.disabled = true;
+
+                fetch('/addtask', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.task) {
+                        // Format the due date for display
+                        const formattedDueDate = data.task.due_date ? 
+                            new Date(data.task.due_date).toLocaleDateString() : 
+                            'No due date';
+
+                        // Create new task element
+                        const taskHtml = `
+                            <li id="task-${data.task.id}" class="flex items-center space-x-4">
+                                <div class="task-circle w-4 h-4 border-2 border-blue-500 rounded-full cursor-pointer"
+                                    onclick="completeTask('${listName}', '${data.task.id}', this)">
+                                </div>
+                                <div>
+                                    <p class="font-semibold">${data.task.title}</p>
+                                    <p class="text-gray-500">${formattedDueDate}</p>
+                                </div>
+                            </li>
+                        `;
+
+                        // Add the new task to the not-completed section
+                        const notCompletedSection = document.getElementById(`not-completed-${listName.replace(' ', '-')}`);
+                        notCompletedSection.insertAdjacentHTML('beforeend', taskHtml);
+
+                        // Clear the form
+                        form.reset();
+                    } else {
+                        // If we couldn't get the task data, show an error or reload the page
+                        alert('Task added but unable to update display. The page will refresh.');
+                        window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error adding task:', error);
+                    alert('Error adding task. Please try again.');
+                })
+                .finally(() => {
+                    // Reset button state
+                    submitButton.innerText = originalButtonText;
+                    submitButton.disabled = false;
+                });
+            }
+        </script>
+
+
+    <style>
+
+        /* Styling for completed tasks */
+        .task-circle.completed {
+            background-color: #d1d5db; /* Grey color for completed */
+            border-color: #9ca3af;    /* Light grey border */
+        }
+
+    </style>
+{% endblock %}
