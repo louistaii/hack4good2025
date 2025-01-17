@@ -2,7 +2,11 @@
 
 Free to use Productivity App made for Singapore Book Council.
 
-Click to watch demo:
+
+[Pitch Deck](https://docs.google.com/presentation/d/1q4T-j9h2wGUrYY-RHlt5aavdGZ1n3dauqsOAuMCswzs/edit?usp=sharing)
+
+
+Click to watch video demo:
 
 [![Demo](https://img.youtube.com/vi/6GwsFEqxd_U/hqdefault.jpg)](https://youtu.be/6GwsFEqxd_U)
 
