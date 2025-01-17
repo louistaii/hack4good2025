@@ -5,5 +5,4 @@ flaskwebgui==1.1.6
 httpx==0.28.1
 msal==1.31.1
 Requests==2.32.3
-torch==2.5.1+cu124
 transformers==4.47.1
