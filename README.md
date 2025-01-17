@@ -1,6 +1,10 @@
 # Hack4good 2025
 
-Free to use Personal Assitant made for Singapore Book Council.
+Free to use Productivity App made for Singapore Book Council.
+
+Click to watch demo:
+
+[![Demo](https://img.youtube.com/vi/6GwsFEqxd_U/hqdefault.jpg)](https://youtu.be/6GwsFEqxd_U)
 
 ## Table of Contents
 
